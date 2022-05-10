@@ -1,6 +1,7 @@
 import React from 'react';
 import logo from './logo.svg';
 import './App.css';
+import Timekeeper from "./Components/TimeComponents/Timekeeper";
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
         >
           Learn React
         </a>
+        <Timekeeper/>
       </header>
     </div>
   );
