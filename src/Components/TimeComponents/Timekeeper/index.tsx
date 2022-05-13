@@ -1,19 +1,33 @@
 import {useEffect, useState} from "react";
+import {TimekeeperRenderizableValue, TimekeeperValue} from "../../../interfaces/Time";
+import {formatTimeValue} from "../../../functions/formatters";
+
 
 const Timekeeper = () => {
     const [initialTime, setInitialTime] = useState<Date>();
-    const [timekeeperValue, setTimekeeperValue] = useState<String>();
+    const timekeeperValueInitialValue = {seconds: 0, displayValue: '00:00:00'};
+    const [timekeeperValue, setTimekeeperValue] = useState<TimekeeperValue>(timekeeperValueInitialValue);
     const [start, setStart] = useState(false);//true for start, false to stop
 
     useEffect(() => {
+        const calculateTimekeeperValue = () => {
+            if (!initialTime) return timekeeperValue;
+            const secondsSinceStart = Math.floor(
+                (new Date().getTime() - initialTime.getTime()) / 1000
+            ) + timekeeperValue.seconds;
+            const minutesSinceStart = Math.floor(secondsSinceStart / 60);
 
+            const values: TimekeeperRenderizableValue = {
+                seconds: secondsSinceStart % 60,
+                minutes: minutesSinceStart % 60,
+                hours: Math.floor(minutesSinceStart / 60)
+            };
+
+            return {displayValue: formatTimeValue(values), seconds: secondsSinceStart};
+        };
         let interval: NodeJS.Timeout;
         if (start) {
-            interval = setInterval(() => {
-                // @ts-ignore
-                setTimekeeperValue(`${(new Date().getHours() - initialTime.getHours()).toString().padStart(2, '0')}:${(new Date().getMinutes() - initialTime.getMinutes()).toString().padStart(2, '0')}:${(new Date().getSeconds()).toString().padStart(2, '0') - initialTime.getSeconds()}`);
-
-            }, 1000);
+            interval = setInterval(() => setTimekeeperValue(calculateTimekeeperValue()), 1000);
         }
 
         return () => {
@@ -21,14 +35,25 @@ const Timekeeper = () => {
         }
 
     }, [start]);
-    const handleClick = () => {
+    const handleStartPause = () => {
         setInitialTime(new Date());
         setStart(!start);
     };
+    const handleClear = () => {
+        setTimekeeperValue(timekeeperValueInitialValue);
+    };
     return (
         <div>
-            {timekeeperValue}
-            <button onClick={handleClick}>{">"}</button>
+            <div>{timekeeperValue.displayValue}</div>
+            <div>
+                <button onClick={handleStartPause}>{start ? "pause" : "start"}</button>
+                {!start &&
+                    initialTime &&
+                    <button onClick={handleClear}>
+                        Clear
+                    </button>}
+            </div>
+
         </div>
     );
 }
